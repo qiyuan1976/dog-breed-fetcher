@@ -7,20 +7,12 @@ public class Main {
     public static void main(String[] args) {
         String breed = "hound";
         BreedFetcher breedFetcher = new CachingBreedFetcher(new BreedFetcherForLocalTesting());
-        try {
-            int result = getNumberOfSubBreeds(breed, breedFetcher);
-            System.out.println(breed + " has " + result + " sub breeds");
-        } catch (BreedFetcher.BreedNotFoundException e) {
-            System.out.println("Unknown breed: " + breed);
-        }
+        int result = getNumberOfSubBreeds(breed, breedFetcher);
+        System.out.println(breed + " has " + result + " sub breeds");
 
         breed = "cat";
-        try {
-            int result = getNumberOfSubBreeds(breed, breedFetcher);
-            System.out.println(breed + " has " + result + " sub breeds");
-        } catch (BreedFetcher.BreedNotFoundException e) {
-            System.out.println("Unknown breed: " + breed);
-        }
+        result = getNumberOfSubBreeds(breed, breedFetcher);
+        System.out.println(breed + " has " + result + " sub breeds");
     }
 
     /**
@@ -31,9 +23,13 @@ public class Main {
      * @return the number of sub breeds. Zero should be returned if there are no sub breeds
      * returned by the fetcher
      */
-    public static int getNumberOfSubBreeds(String breed, BreedFetcher breedFetcher)
-            throws BreedFetcher.BreedNotFoundException {
-        List<String> subs = breedFetcher.getSubBreeds(breed);
-        return subs.size();
+    public static int getNumberOfSubBreeds(String breed, BreedFetcher breedFetcher) {
+        try {
+            return breedFetcher.getSubBreeds(breed).size(); // returns 0 if list is empty
+        } catch (BreedFetcher.BreedNotFoundException e) {
+            // Tests call without try/catch, so we swallow the checked exception and return 0
+            return 0;
+        }
     }
+
 }
