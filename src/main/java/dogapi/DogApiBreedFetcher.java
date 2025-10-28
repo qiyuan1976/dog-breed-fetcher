@@ -6,7 +6,6 @@ import okhttp3.Response;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.io.IOException;
 import java.util.*;
 
 /**
@@ -24,12 +23,33 @@ public class DogApiBreedFetcher implements BreedFetcher {
      * @throws BreedNotFoundException if the breed does not exist (or if the API call fails for any reason)
      */
     @Override
-    public List<String> getSubBreeds(String breed) {
-        // TODO Task 1: Complete this method based on its provided documentation
-        //      and the documentation for the dog.ceo API. You may find it helpful
-        //      to refer to the examples of using OkHttpClient from the last lab,
-        //      as well as the code for parsing JSON responses.
-        // return statement included so that the starter code can compile and run.
-        return new ArrayList<>();
+    public List<String> getSubBreeds(String breed) throws BreedNotFoundException {
+        String b = (breed == null ? "" : breed.trim().toLowerCase());
+        if (b.isEmpty()) {
+            throw new BreedNotFoundException(breed);
+        }
+        String url = "https://dog.ceo/api/breed/" + b + "/list";
+        Request req = new Request.Builder().url(url).build();
+        try (Response resp = client.newCall(req).execute()) {
+            if (!resp.isSuccessful() || resp.body() == null) {
+                throw new BreedNotFoundException(breed);
+            }
+            String body = resp.body().string();
+            JSONObject json = new JSONObject(body);
+            String status = json.optString("status", "error");
+            if ("error".equalsIgnoreCase(status)) {
+                // API returns 200 with "status":"error" for unknown main breed
+                throw new BreedNotFoundException(breed);
+            }
+            JSONArray arr = json.getJSONArray("message");
+            List<String> out = new ArrayList<>(arr.length());
+            for (int i = 0; i < arr.length(); i++) {
+                out.add(arr.getString(i));
+            }
+            return out;
+        } catch (Exception e) {
+            // Wrap any I/O/parse errors as "breed not found" per spec/comments
+            throw new BreedNotFoundException(breed);
+        }
     }
 }
